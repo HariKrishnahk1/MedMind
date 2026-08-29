@@ -1,75 +1,48 @@
-import { mockPatients, mockAlerts, mockPredictions, mockTimelines } from '../mock-data/db';
 import type { Patient } from '../types/patient';
 import type { Alert } from '../types/alert';
+import type { TimelineEvent } from '../types/timeline';
+import type { Prediction } from '../types/predictions';
 
-// Utility to simulate network delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const API_BASE = 'http://localhost:8000/api';
 
 export const api = {
-  // GET /api/patients
   getPatients: async (): Promise<Patient[]> => {
-    await delay(600); // simulate latency
-    return [...mockPatients];
+    const res = await fetch(`${API_BASE}/patients`);
+    return res.json();
   },
 
-  // GET /api/patients/{id}
   getPatient: async (id: string): Promise<Patient | undefined> => {
-    await delay(500);
-    return mockPatients.find(p => p.id === id);
+    const res = await fetch(`${API_BASE}/patients/${id}`);
+    if (!res.ok) return undefined;
+    return res.json();
   },
 
-  // GET /api/patients/{id}/observations
-  getObservations: async (id: string) => {
-    await delay(300);
-    const patient = mockPatients.find(p => p.id === id);
-    return patient ? patient.vitals : null;
+  getPredictions: async (id: string): Promise<Prediction[]> => {
+    const res = await fetch(`${API_BASE}/patients/${id}/predictions`);
+    return res.json();
   },
 
-  // GET /api/patients/{id}/predictions
-  getPredictions: async (id: string) => {
-    await delay(400);
-    return mockPredictions[id] || [];
+  getTimeline: async (id: string): Promise<TimelineEvent[]> => {
+    const res = await fetch(`${API_BASE}/patients/${id}/timeline`);
+    return res.json();
   },
 
-  // GET /api/patients/{id}/timeline
-  getTimeline: async (id: string) => {
-    await delay(400);
-    return mockTimelines[id] || [];
-  },
-
-  // GET /api/alerts
   getAlerts: async (): Promise<Alert[]> => {
-    await delay(500);
-    return [...mockAlerts];
+    const res = await fetch(`${API_BASE}/alerts`);
+    return res.json();
   },
 
-  // POST /api/alerts/{id}/acknowledge
   acknowledgeAlert: async (id: string): Promise<boolean> => {
-    await delay(300);
-    // Note: In a real app this would call the backend. Here we just return true.
-    return true;
+    const res = await fetch(`${API_BASE}/alerts/${id}/acknowledge`, { method: 'POST' });
+    return res.ok;
   },
 
-  // POST /api/handover
   generateHandover: async (patientId: string, receivingFacility: string) => {
-    await delay(1200); // longer delay to simulate AI generation
-    const patient = mockPatients.find(p => p.id === patientId);
-    if (!patient) throw new Error('Patient not found');
-    
-    return {
-      success: true,
-      report: `HANDOVER SUMMARY: ${patient.name} (${patient.mrn})
-Transfer to: ${receivingFacility}
-Priority: ${patient.priority}
-
-Patient condition deteriorated during night shift. Sepsis protocol initiated at 02:00. Blood cultures drawn, broad-spectrum IV antibiotics started. SpO2 unstable, currently requires 4L O2. Closely monitor BP and urine output.
-
-PENDING TASKS:
-- Check AM Labs
-- Follow up on Cultures
-- Physical Therapy Assessment
-
-Vitals at Handover: BP ${patient.vitals.bloodPressure.systolic}/${patient.vitals.bloodPressure.diastolic}, HR ${patient.vitals.heartRate} bpm.`
-    };
+    const res = await fetch(`${API_BASE}/patients/${patientId}/handover`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ receivingFacility })
+    });
+    return res.json();
   }
 };
