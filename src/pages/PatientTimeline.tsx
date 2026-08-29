@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { History, Activity, AlertTriangle, ArrowRightCircle } from 'lucide-react';
-import { mockTimelines, mockPatients } from '../mock-data/db';
+import { api } from '../services/api';
+import type { Patient } from '../types/patient';
+import type { TimelineEvent } from '../types/timeline';
 
 export const PatientTimeline: React.FC = () => {
-  const patient = mockPatients[0]; // P-1001
-  const timelineEvents = mockTimelines[patient.id] || [];
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+
+  useEffect(() => {
+    // Assuming P-1001 for demonstration as in original code
+    api.getPatient('P-1001').then(p => {
+        if (p) setPatient(p);
+    });
+    api.getTimeline('P-1001').then(setTimelineEvents);
+  }, []);
+
+  if (!patient) return <div>Loading...</div>;
 
   const getEventIcon = (type: string) => {
     switch (type) {
