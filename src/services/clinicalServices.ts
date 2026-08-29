@@ -2,45 +2,43 @@ import { Patient } from '../types/patient';
 import { Alert } from '../types/alert';
 import { TimelineEvent } from '../types/timeline';
 import { Prediction } from '../types/predictions';
-import { mockPatients, mockAlerts, mockPredictions, mockTimelines } from '../mock-data/db';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const patientService = {
   async getPatients(): Promise<Patient[]> {
-    await delay(500);
-    return mockPatients;
+    const res = await fetch('/api/patients');
+    if (!res.ok) throw new Error('Failed to fetch patients');
+    return res.json();
   },
 
   async getPatient(id: string): Promise<Patient> {
-    await delay(300);
-    const patient = mockPatients.find(p => p.id === id);
-    if (!patient) throw new Error('Patient not found');
-    return patient;
+    const res = await fetch(`/api/patients/${id}`);
+    if (!res.ok) throw new Error('Patient not found');
+    return res.json();
   },
 
   async getPatientPredictions(id: string): Promise<Prediction[]> {
-    await delay(400);
-    return mockPredictions[id] || [];
+    const res = await fetch(`/api/patients/${id}/predictions`);
+    if (!res.ok) throw new Error('Failed to fetch predictions');
+    return res.json();
   },
 
   async getPatientTimeline(id: string): Promise<TimelineEvent[]> {
-    await delay(400);
-    return mockTimelines[id] || [];
+    const res = await fetch(`/api/patients/${id}/timeline`);
+    if (!res.ok) throw new Error('Failed to fetch timeline');
+    return res.json();
   }
 };
 
 export const alertService = {
   async getAlerts(): Promise<Alert[]> {
-    await delay(400);
-    return mockAlerts;
+    const res = await fetch('/api/alerts');
+    if (!res.ok) throw new Error('Failed to fetch alerts');
+    return res.json();
   },
   
   async acknowledgeAlert(id: string): Promise<void> {
-    await delay(300);
-    const alert = mockAlerts.find(a => a.id === id);
-    if (alert) {
-      alert.status = 'Acknowledged';
-    }
+    const res = await fetch(`/api/alerts/${id}/acknowledge`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to acknowledge alert');
   }
 };
+
