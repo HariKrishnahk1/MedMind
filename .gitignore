@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+*.log
+.pytest_cache/
+.ipynb_checkpoints/
+data/raw/*.csv
+data/processed/*.csv
+!data/raw/README.md
+!data/processed/README.md
+models/*/*.joblib
+models/*/*.json
+models/best_model.joblib

@@ -1,0 +1,36 @@
+# Configuration for AI/ML Deterioration Prediction Engine Prototype
+# Note: These parameters are prototype settings and are NOT clinically validated.
+
+model:
+  name: "xgboost_v1"
+  default_horizon_minutes: 15
+  random_seed: 42
+  test_patient_ratio: 0.2
+
+risk_thresholds:
+  low: 0.30      # Risk score < 0.30 -> low
+  medium: 0.70   # 0.30 <= Risk score < 0.70 -> medium
+                 # Risk score >= 0.70 -> high
+
+feature_config:
+  vitals:
+    - heart_rate
+    - systolic_bp
+    - diastolic_bp
+    - spo2
+    - respiratory_rate
+    - temperature
+  labs:
+    - lab_value_1  # e.g., Lactate (mmol/L)
+    - lab_value_2  # e.g., Creatinine (mg/dL)
+  categories:
+    - diagnosis_category
+    - medication_category
+  patient_meta:
+    - age
+    - sex
+
+shap:
+  top_n_features: 5
+
+disclaimer: "Research prototype only. Predictions are generated from synthetic/de-identified data and have not been clinically validated. Predictions must not be used independently for diagnosis or treatment. Clinical interpretation and treatment decisions remain the responsibility of qualified healthcare professionals."
