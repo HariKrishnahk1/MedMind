@@ -26,7 +26,7 @@ except ImportError:
 import joblib
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Any, Union
+from typing import Dict, List, Any, Union, Optional
 
 from src.data.validation import validate_and_clean_dataset, validate_raw_schema
 from src.features.clinical_features import compute_patient_level_features
