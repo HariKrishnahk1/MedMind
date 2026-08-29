@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRightLeft, FileText, CheckCircle, Hospital, Loader2, Download, AlertTriangle } from 'lucide-react';
-import { Patient } from '../types/patient';
+import type { Patient } from '../types/patient';
 import { api } from '../services/api';
 
 export const Handover: React.FC = () => {

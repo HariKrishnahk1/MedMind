@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, AlertCircle, ChevronRight, Activity } from 'lucide-react';
-import { Patient } from '../types/patient';
+import type { Patient } from '../types/patient';
 import { api } from '../services/api';
 import { Skeleton } from '../components/ui/Skeleton';
 
