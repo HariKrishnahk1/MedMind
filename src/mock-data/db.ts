@@ -1,7 +1,7 @@
-import { Patient } from '../types/patient';
-import { Alert } from '../types/alert';
-import { TimelineEvent } from '../types/timeline';
-import { Prediction } from '../types/predictions';
+import type { Patient } from '../types/patient';
+import type { Alert } from '../types/alert';
+import type { TimelineEvent } from '../types/timeline';
+import type { Prediction } from '../types/predictions';
 
 export const mockPatients: Patient[] = [
   {
