@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrainCircuit, Info, TrendingDown, TrendingUp, HelpCircle } from 'lucide-react';
-import { mockPredictions, mockPatients } from '../mock-data/db';
+import { api } from '../services/api';
+import type { Patient } from '../types/patient';
+import type { Prediction } from '../types/predictions';
 
 export const AIExplainability: React.FC = () => {
-  const prediction = mockPredictions['P-1001'][0];
-  const patient = mockPatients.find(p => p.id === 'P-1001');
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+
+  useEffect(() => {
+    api.getPatient('P-1001').then(p => p && setPatient(p));
+    api.getPredictions('P-1001').then(preds => setPrediction(preds[0]));
+  }, []);
+
+  if (!patient || !prediction) return <div>Loading...</div>;
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
