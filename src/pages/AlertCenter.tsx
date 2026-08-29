@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Clock, CheckCircle, Search, Filter, ShieldAlert } from 'lucide-react';
 import { mockAlerts, mockPatients } from '../mock-data/db';
-import { Alert } from '../types/alert';
+import type { Alert } from '../types/alert';
 
 export const AlertCenter: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);

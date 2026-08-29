@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Heart, Wind, Thermometer, Droplet, AlertCircle } from 'lucide-react';
 import { mockPatients } from '../mock-data/db';
-import { Patient } from '../types/patient';
+import type { Patient } from '../types/patient';
 
 export const Monitoring: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
