@@ -2,45 +2,34 @@ import type { Patient } from '../types/patient';
 import type { Alert } from '../types/alert';
 import type { TimelineEvent } from '../types/timeline';
 import type { Prediction } from '../types/predictions';
-import { mockPatients, mockAlerts, mockPredictions, mockTimelines } from '../mock-data/db';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import { api } from './api';
 
 export const patientService = {
   async getPatients(): Promise<Patient[]> {
-    await delay(500);
-    return mockPatients;
+    return api.getPatients();
   },
 
   async getPatient(id: string): Promise<Patient> {
-    await delay(300);
-    const patient = mockPatients.find(p => p.id === id);
-    if (!patient) throw new Error('Patient not found');
-    return patient;
+    const p = await api.getPatient(id);
+    if (!p) throw new Error('Patient not found');
+    return p;
   },
 
   async getPatientPredictions(id: string): Promise<Prediction[]> {
-    await delay(400);
-    return mockPredictions[id] || [];
+    return api.getPredictions(id);
   },
 
   async getPatientTimeline(id: string): Promise<TimelineEvent[]> {
-    await delay(400);
-    return mockTimelines[id] || [];
+    return api.getTimeline(id);
   }
 };
 
 export const alertService = {
   async getAlerts(): Promise<Alert[]> {
-    await delay(400);
-    return mockAlerts;
+    return api.getAlerts();
   },
   
   async acknowledgeAlert(id: string): Promise<void> {
-    await delay(300);
-    const alert = mockAlerts.find(a => a.id === id);
-    if (alert) {
-      alert.status = 'Acknowledged';
-    }
+    await api.acknowledgeAlert(id);
   }
 };
