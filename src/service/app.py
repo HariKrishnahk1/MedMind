@@ -12,9 +12,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 from typing import List, Optional, Dict, Any
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from src.models.predict import DeteriorationPredictor
+from src.service.db import mock_patients, mock_alerts, mock_predictions, mock_timelines
 
 DISCLAIMER_TEXT = (
     "Research prototype only. Predictions are generated from synthetic/de-identified data "
@@ -40,6 +42,14 @@ app = FastAPI(
     description=f"Continuous clinical observation monitoring and deterioration prediction API.\n\n**Safety Disclaimer**: {DISCLAIMER_TEXT}",
     version="1.0.0",
     lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 def get_predictor() -> DeteriorationPredictor:
@@ -127,3 +137,59 @@ def predict_deterioration(request: PredictionRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Prediction computation failed: {str(e)}"
         )
+
+@app.get("/api/patients")
+def get_patients():
+    return mock_patients
+
+@app.get("/api/patients/{patient_id}")
+def get_patient(patient_id: str):
+    patient = next((p for p in mock_patients if p["id"] == patient_id), None)
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return patient
+
+@app.get("/api/patients/{patient_id}/predictions")
+def get_predictions(patient_id: str):
+    return mock_predictions.get(patient_id, [])
+
+@app.get("/api/patients/{patient_id}/timeline")
+def get_timeline(patient_id: str):
+    return mock_timelines.get(patient_id, [])
+
+@app.get("/api/alerts")
+def get_alerts():
+    return mock_alerts
+
+@app.post("/api/alerts/{alert_id}/acknowledge")
+def acknowledge_alert(alert_id: str):
+    alert = next((a for a in mock_alerts if a["id"] == alert_id), None)
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    alert["status"] = "Acknowledged"
+    return {"success": True}
+
+class HandoverRequest(BaseModel):
+    patientId: str
+    receivingFacility: str
+
+@app.post("/api/handover")
+def generate_handover(req: HandoverRequest):
+    patient = next((p for p in mock_patients if p["id"] == req.patientId), None)
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    report = (
+        f"HANDOVER SUMMARY: {patient['name']} ({patient['mrn']})\n"
+        f"Transfer to: {req.receivingFacility}\n"
+        f"Priority: {patient['priority']}\n\n"
+        f"Patient condition deteriorated during night shift. Sepsis protocol initiated at 02:00. Blood cultures drawn, broad-spectrum IV antibiotics started. SpO2 unstable, currently requires 4L O2. Closely monitor BP and urine output.\n\n"
+        f"PENDING TASKS:\n"
+        f"- Check AM Labs\n"
+        f"- Follow up on Cultures\n"
+        f"- Physical Therapy Assessment\n\n"
+        f"Vitals at Handover: BP {patient['vitals']['bloodPressure']['systolic']}/{patient['vitals']['bloodPressure']['diastolic']}, HR {patient['vitals']['heartRate']} bpm."
+    )
+    
+    return {"success": True, "report": report}
+
