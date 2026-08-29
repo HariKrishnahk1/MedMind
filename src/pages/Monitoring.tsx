@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Heart, Wind, Thermometer, Droplet, AlertCircle } from 'lucide-react';
-import { mockPatients } from '../mock-data/db';
+import { api } from '../services/api';
 import type { Patient } from '../types/patient';
 
 export const Monitoring: React.FC = () => {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const [patients, setPatients] = useState<Patient[]>([]);
 
   // Simulate real-time updates
   useEffect(() => {
+    api.getPatients().then(setPatients).catch(console.error);
     const interval = setInterval(() => {
       setPatients(prev => prev.map(p => {
-        // Randomly fluctuate vitals slightly
         const hrFluctuation = Math.floor(Math.random() * 5) - 2;
         const spo2Fluctuation = Math.random() > 0.8 ? -1 : (Math.random() > 0.5 ? 1 : 0);
         
