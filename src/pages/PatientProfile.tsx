@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { patientService } from '../services/clinicalServices';
-import { Patient } from '../types/patient';
-import { Prediction } from '../types/predictions';
-import { TimelineEvent } from '../types/timeline';
+import type { Patient } from '../types/patient';
+import type { Prediction } from '../types/predictions';
+import type { TimelineEvent } from '../types/timeline';
 import { Activity, ArrowLeft, BrainCircuit, AlertTriangle, Info } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
