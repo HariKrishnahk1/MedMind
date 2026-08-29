@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Clock, CheckCircle, Search, Filter, ShieldAlert } from 'lucide-react';
-import { mockAlerts, mockPatients } from '../mock-data/db';
+import { api } from '../services/api';
 import type { Alert } from '../types/alert';
+import type { Patient } from '../types/patient';
 
 export const AlertCenter: React.FC = () => {
-  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const acknowledgeAlert = (id: string) => {
+  useEffect(() => {
+    api.getAlerts().then(setAlerts).catch(console.error);
+    api.getPatients().then(setPatients).catch(console.error);
+  }, []);
+
+  const acknowledgeAlert = async (id: string) => {
+    await api.acknowledgeAlert(id);
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: 'Acknowledged' } : a));
   };
 
@@ -41,7 +49,7 @@ export const AlertCenter: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-4">
         {alerts.map((alert) => {
-          const patient = mockPatients.find(p => p.id === alert.patientId);
+          const patient = patients.find(p => p.id === alert.patientId);
           const isCritical = alert.newPriority === 'Critical';
           const isAcknowledged = alert.status === 'Acknowledged';
 
