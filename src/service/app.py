@@ -17,6 +17,13 @@ from pydantic import BaseModel, Field
 
 from src.models.predict import DeteriorationPredictor
 from src.service.db import mock_patients, mock_alerts, mock_predictions, mock_timelines
+from src.service.member4 import (
+    update_patient_priority,
+    execute_patient_transfer,
+    generate_ai_handover,
+    review_handover,
+    get_final_report
+)
 
 DISCLAIMER_TEXT = (
     "Research prototype only. Predictions are generated from synthetic/de-identified data "
@@ -129,6 +136,10 @@ def predict_deterioration(request: PredictionRequest):
             horizon_minutes=request.prediction_horizon_minutes
         )
         prediction_result["disclaimer"] = DISCLAIMER_TEXT
+        
+        # Member 4: Dynamic Priority Update based on prediction risk
+        update_patient_priority(obs_dicts[0]["patient_id"], prediction_result)
+        
         return prediction_result
     except ValueError as ve:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
@@ -169,27 +180,49 @@ def acknowledge_alert(alert_id: str):
     alert["status"] = "Acknowledged"
     return {"success": True}
 
-class HandoverRequest(BaseModel):
-    patientId: str
-    receivingFacility: str
-
-@app.post("/api/handover")
-def generate_handover(req: HandoverRequest):
-    patient = next((p for p in mock_patients if p["id"] == req.patientId), None)
+@app.get("/api/patients/{patient_id}/priority")
+def get_patient_priority(patient_id: str):
+    patient = next((p for p in mock_patients if p["id"] == patient_id), None)
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    
-    report = (
-        f"HANDOVER SUMMARY: {patient['name']} ({patient['mrn']})\n"
-        f"Transfer to: {req.receivingFacility}\n"
-        f"Priority: {patient['priority']}\n\n"
-        f"Patient condition deteriorated during night shift. Sepsis protocol initiated at 02:00. Blood cultures drawn, broad-spectrum IV antibiotics started. SpO2 unstable, currently requires 4L O2. Closely monitor BP and urine output.\n\n"
-        f"PENDING TASKS:\n"
-        f"- Check AM Labs\n"
-        f"- Follow up on Cultures\n"
-        f"- Physical Therapy Assessment\n\n"
-        f"Vitals at Handover: BP {patient['vitals']['bloodPressure']['systolic']}/{patient['vitals']['bloodPressure']['diastolic']}, HR {patient['vitals']['heartRate']} bpm."
-    )
-    
-    return {"success": True, "report": report}
+    return {"patient_id": patient_id, "priority": patient.get("priority", "Stable")}
+
+@app.get("/api/patients/{patient_id}/alerts")
+def get_patient_alerts(patient_id: str):
+    return [a for a in mock_alerts if a["patientId"] == patient_id]
+
+class HandoverRequest(BaseModel):
+    receivingFacility: str
+
+@app.post("/api/patients/{patient_id}/transfer")
+def transfer_patient(patient_id: str, req: HandoverRequest):
+    try:
+        return execute_patient_transfer(patient_id, req.receivingFacility)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@app.post("/api/patients/{patient_id}/handover")
+def generate_ai_handover_endpoint(patient_id: str, req: HandoverRequest):
+    try:
+        return generate_ai_handover(patient_id, req.receivingFacility)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+class ReviewRequest(BaseModel):
+    status: str
+    comments: str = ""
+
+@app.post("/api/handover/{handover_id}/review")
+def review_handover_endpoint(handover_id: str, req: ReviewRequest):
+    try:
+        return review_handover(handover_id, req.status, req.comments)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/handover/{handover_id}")
+def get_final_report_endpoint(handover_id: str):
+    try:
+        return get_final_report(handover_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
