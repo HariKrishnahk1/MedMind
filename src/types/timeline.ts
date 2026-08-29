@@ -1,4 +1,4 @@
-import { Priority } from './patient';
+import type { Priority } from './patient';
 
 export interface TimelineEvent {
   id: string;
