@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { patientService, alertService } from '../services/clinicalServices';
-import { Patient } from '../types/patient';
-import { Alert } from '../types/alert';
+import type { Patient } from '../types/patient';
+import type { Alert } from '../types/alert';
 import { Users, AlertTriangle, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -179,6 +179,38 @@ export const Dashboard: React.FC = () => {
                     Review Alert
                   </button>
                 )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {/* Risk Trends (Mocked Unit Level Trend) */}
+        <div className="bg-surface border border-slate-200 rounded-xl shadow-sm flex flex-col p-5">
+          <h2 className="text-base font-semibold text-slate-900 mb-4">Unit Risk Trends (24h)</h2>
+          <div className="flex-1 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-lg text-slate-400 text-sm italic py-12">
+            [Trend Visualization] Risk levels have remained mostly stable, with a slight 5% increase in moderate risk patients.
+          </div>
+        </div>
+
+        {/* Recently Changed Priorities */}
+        <div className="bg-surface border border-slate-200 rounded-xl shadow-sm flex flex-col p-5">
+          <h2 className="text-base font-semibold text-slate-900 mb-4">Recently Changed Priorities</h2>
+          <div className="space-y-3">
+            {patients.slice(0, 3).map(patient => (
+              <div key={`recent-${patient.id}`} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-slate-900">{patient.name}</span>
+                  <span className="text-xs text-slate-500">{patient.room}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-500 line-through">Moderate</span>
+                  <ArrowUpRight className="h-4 w-4 text-orange-500" />
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
+                    High
+                  </span>
+                </div>
               </div>
             ))}
           </div>
