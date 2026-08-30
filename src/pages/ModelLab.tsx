@@ -39,7 +39,7 @@ export const ModelLab: React.FC = () => {
     }
   };
 
-  const pollJobStatus = (jobId: str) => {
+  const pollJobStatus = (jobId: string) => {
     const interval = setInterval(async () => {
       try {
         const res = await fetchApi(`/api/ai/train/status/${jobId}`);
@@ -57,7 +57,7 @@ export const ModelLab: React.FC = () => {
     }, 2000);
   };
 
-  const handlePromote = async (version: str) => {
+  const handlePromote = async (version: string) => {
     try {
       await fetchApi('/api/ai/models/promote', {
         method: 'POST',

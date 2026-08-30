@@ -5,6 +5,12 @@ import type { Prediction } from '../types/predictions';
 
 const API_BASE = 'http://localhost:8000/api';
 
+export const fetchApi = async (endpoint: string, options?: RequestInit) => {
+  const url = endpoint.startsWith('http') ? endpoint : `http://localhost:8000${endpoint}`;
+  const res = await fetch(url, options);
+  return res.json();
+};
+
 export const api = {
   getPatients: async (): Promise<Patient[]> => {
     const res = await fetch(`${API_BASE}/patients`);

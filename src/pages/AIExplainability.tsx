@@ -59,7 +59,7 @@ export const AIExplainability: React.FC = () => {
           <div>
             <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
               Feature Importance
-              <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" title="Factors contributing most to this prediction" />
+              <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
             </h3>
             
             <div className="space-y-4">

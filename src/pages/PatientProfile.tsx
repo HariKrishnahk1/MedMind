@@ -4,7 +4,7 @@ import { patientService } from '../services/clinicalServices';
 import type { Patient } from '../types/patient';
 import type { Prediction } from '../types/predictions';
 import type { TimelineEvent } from '../types/timeline';
-import { Activity, ArrowLeft, BrainCircuit, AlertTriangle, Info } from 'lucide-react';
+import { Activity, ArrowLeft, BrainCircuit, AlertTriangle, Info, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 // Mock chart data for vitals
