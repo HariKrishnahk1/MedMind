@@ -1,0 +1,5 @@
+experiment,feature_count,auroc,f1_score,precision,recall,brier_score
+Exp A (Raw Clinical Vitals),6,0.9512,0.7617,0.6498,0.9203,0.0593
+Exp B (Raw + Temporal),47,0.9526,0.7647,0.6542,0.9203,0.0564
+Exp C (Raw + Temporal + Baseline),55,0.9528,0.7658,0.6564,0.9189,0.0562
+Exp D (Full Architecture: Raw + Temp + Base + Missingness),115,0.9555,0.7702,0.6615,0.9216,0.0558
