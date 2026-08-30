@@ -82,20 +82,28 @@ def compute_temporal_deterioration_target(
                 f_rrs = rrs[future_mask]
                 f_lab1s = lab1s[future_mask]
                 
-                # Check deterioration criteria on future window
+                # Compute multi-factor synthetic latent deterioration score
+                # 1. Single extreme threshold breach
                 det_hr = np.any((f_hrs > 120) | (f_hrs < 45))
                 det_sbp = np.any((f_sbps < 90) | (f_sbps > 180))
                 det_spo2 = np.any((f_spo2s < 90) & ~np.isnan(f_spo2s))
                 det_rr = np.any(((f_rrs > 30) | (f_rrs < 8)) & ~np.isnan(f_rrs))
                 det_lab1 = np.any((f_lab1s > 3.5) & ~np.isnan(f_lab1s))
                 
-                if det_hr or det_sbp or det_spo2 or det_rr or det_lab1:
+                # 2. Combined multi-vital trajectory deviation (latent score > 2.0)
+                hr_dev = np.nanmax(np.abs(f_hrs - 75.0)) / 25.0
+                spo2_dev = np.nanmax(np.maximum(98.0 - f_spo2s, 0.0)) / 5.0 if not np.all(np.isnan(f_spo2s)) else 0.0
+                sbp_dev = np.nanmax(np.abs(f_sbps - 120.0)) / 30.0
+                latent_score = hr_dev + spo2_dev + sbp_dev
+                
+                if det_hr or det_sbp or det_spo2 or det_rr or det_lab1 or (latent_score >= 2.0):
                     targets[indices[i]] = 1
             else:
                 targets[indices[i]] = 0
                 
     df_sorted["target_deterioration"] = targets
     return df_sorted
+
 
 def get_feature_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     """

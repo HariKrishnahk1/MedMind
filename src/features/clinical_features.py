@@ -165,6 +165,7 @@ def compute_patient_level_features(patient_df: pd.DataFrame) -> pd.DataFrame:
     
     # Combine with original patient dataframe metadata
     result_df = pd.concat([df_p, feature_df], axis=1)
+    result_df = result_df.loc[:, ~result_df.columns.duplicated()]
     return result_df
 
 def generate_all_clinical_features(df: pd.DataFrame) -> pd.DataFrame:

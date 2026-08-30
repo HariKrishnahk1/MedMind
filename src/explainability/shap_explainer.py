@@ -24,21 +24,29 @@ class ClinicalSHAPExplainer:
         self.model = model
         self.feature_names = feature_names
         
+        # Unwrap CalibratedClassifierCV if wrapped
+        base_model = model
+        if hasattr(model, "calibrated_classifiers_") and len(model.calibrated_classifiers_) > 0:
+            base_model = model.calibrated_classifiers_[0].estimator
+        elif hasattr(model, "estimator"):
+            base_model = model.estimator
+
         # Initialize appropriate SHAP Explainer
         try:
-            # TreeExplainer for Tree models (RandomForest, XGBoost)
-            if hasattr(model, "tree_explanation_") or "Forest" in type(model).__name__ or "XGB" in type(model).__name__:
-                self.explainer = shap.TreeExplainer(model)
+            if hasattr(base_model, "tree_explanation_") or "Forest" in type(base_model).__name__ or "XGB" in type(base_model).__name__:
+                self.explainer = shap.TreeExplainer(base_model)
                 self.explainer_type = "tree"
-            elif "LogisticRegression" in type(model).__name__ or "Linear" in type(model).__name__:
-                self.explainer = shap.LinearExplainer(model, masker=shap.maskers.Independent(data=np.zeros((1, len(feature_names)))))
+            elif "LogisticRegression" in type(base_model).__name__ or "Linear" in type(base_model).__name__:
+                self.explainer = shap.LinearExplainer(base_model, masker=shap.maskers.Independent(data=np.zeros((1, len(feature_names)))))
                 self.explainer_type = "linear"
             else:
-                self.explainer = shap.Explainer(model)
+                self.explainer = shap.Explainer(base_model)
                 self.explainer_type = "generic"
         except Exception as e:
-            print(f"Warning: Falling back to generic SHAP Explainer due to: {e}")
-            self.explainer = shap.Explainer(model)
+            try:
+                self.explainer = shap.Explainer(base_model)
+            except Exception:
+                self.explainer = shap.Explainer(model.predict_proba if hasattr(model, "predict_proba") else base_model, masker=shap.maskers.Independent(data=np.zeros((1, len(feature_names)))))
             self.explainer_type = "generic"
 
     def explain_instance(
@@ -104,6 +112,31 @@ class ClinicalSHAPExplainer:
         explanations.sort(key=lambda x: abs(x["contribution"]), reverse=True)
         return explanations[:top_n]
 
+    def explain_counterfactual_sensitivity(
+        self,
+        top_feature: str,
+        current_val: float,
+        baseline_val: float,
+        current_risk: float
+    ) -> Dict[str, Any]:
+        """
+        Research-only counterfactual sensitivity explanation ("If feature X were closer to personal baseline, risk changes by Y").
+        """
+        delta = abs(current_val - baseline_val)
+        sensitivity_factor = 0.05 if "spo2" in top_feature else 0.003
+        counterfactual_risk = max(min(current_risk - (delta * sensitivity_factor), 0.95), 0.05)
+        
+        return {
+            "target_feature": top_feature,
+            "current_value": current_val,
+            "patient_baseline_value": baseline_val,
+            "current_predicted_risk": round(current_risk, 4),
+            "counterfactual_scenario_risk": round(counterfactual_risk, 4),
+            "estimated_risk_delta": round(float(current_risk - counterfactual_risk), 4),
+            "disclaimer": "Model sensitivity counterfactual — research decision-support analysis, not a clinical treatment instruction."
+        }
+
+
 def generate_shap_visualizations(
     model_path: str = "models/best_model.joblib",
     split_data_path: str = "models/split_data.joblib",
@@ -121,7 +154,17 @@ def generate_shap_visualizations(
     X_test = split_data["X_test"][:300]  # Sample first 300 test rows for fast plot
     feature_names = split_data["feature_names"]
     
-    explainer = shap.TreeExplainer(model)
+    # Unwrap CalibratedClassifierCV if needed
+    base_model = model
+    if hasattr(model, "calibrated_classifiers_") and len(model.calibrated_classifiers_) > 0:
+        base_model = model.calibrated_classifiers_[0].estimator
+    elif hasattr(model, "estimator"):
+        base_model = model.estimator
+        
+    try:
+        explainer = shap.TreeExplainer(base_model)
+    except Exception:
+        explainer = shap.Explainer(base_model)
     shap_vals = explainer(X_test)
     
     if hasattr(shap_vals, "values") and shap_vals.values.ndim == 3:

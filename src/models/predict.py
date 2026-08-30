@@ -73,8 +73,8 @@ class DeteriorationPredictor:
         
         if os.path.exists(split_data_path):
             split_data = joblib.load(split_data_path)
-            self.feature_names = split_data["feature_names"]
-            self.raw_feature_cols = split_data["raw_feature_cols"]
+            self.feature_names = split_data.get("feature_names", [])
+            self.raw_feature_cols = split_data.get("raw_feature_cols", self.feature_names)
         else:
             self.feature_names = [f"feature_{i}" for i in range(100)]
             self.raw_feature_cols = []
@@ -133,8 +133,14 @@ class DeteriorationPredictor:
         # Latest observation row represents prediction timestamp T
         latest_row_df = featured_df.tail(1).copy()
         
-        # Ensure all expected raw feature columns are present
-        X_raw = latest_row_df[self.raw_feature_cols]
+        if not self.raw_feature_cols or any(c.startswith("cat_") for c in self.raw_feature_cols):
+            from src.data.preprocessing import get_feature_columns
+            num_cols, cat_cols = get_feature_columns(latest_row_df)
+            feature_cols = [c for c in num_cols + cat_cols if c in latest_row_df.columns]
+        else:
+            feature_cols = [c for c in self.raw_feature_cols if c in latest_row_df.columns]
+            
+        X_raw = latest_row_df[feature_cols]
         
         # 3. Transform using Preprocessor
         X_transformed = self.preprocessor.transform(X_raw)
